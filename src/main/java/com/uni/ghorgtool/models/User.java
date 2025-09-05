@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -28,11 +29,19 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String githubToken;
 
-    private String role = "USER";
+    private String role = "user";
 
     public String getGithubToken() {
         return githubToken;
     }
+        @ManyToMany
+    @JoinTable(
+        name = "user_org",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "org_id")
+    )
+    private Set<Org> orgs;
+
 
     // other fields like name, regNo, etc.
 
