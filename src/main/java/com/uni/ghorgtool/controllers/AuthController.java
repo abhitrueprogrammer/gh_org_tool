@@ -74,7 +74,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginUserHandler(@RequestBody LoginRequest loginRequest)
-    {
+    {   
         String username = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 

@@ -1,6 +1,8 @@
 package com.uni.ghorgtool.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -19,23 +21,28 @@ import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
+@RequiredArgsConstructor
 public class AppConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
+
+    private final JwtValidator jwtValidator;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/signup", "/login", "/ping").permitAll()
-                        .anyRequest().authenticated()
-//                        .anyRequest().permitAll() // For testing purposes, allow all requests
+                        .requestMatchers("/signup", "/login", "/ping", "/error").permitAll().anyRequest()
+                        .authenticated()
+                // .anyRequest().permitAll() // For testing purposes, allow all requests
                 )
-                .addFilterBefore(new JwtValidator(), BasicAuthenticationFilter.class)
+                .anonymous(Customizer.withDefaults())
+                .addFilterBefore(jwtValidator, BasicAuthenticationFilter.class)
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS)
-                )
+                        .sessionCreationPolicy(
+                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
@@ -47,8 +54,7 @@ public class AppConfig {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
-                "http://localhost:4200"
-        ));
+                "http://localhost:4200"));
         cfg.setAllowedMethods(Collections.singletonList("*"));
         cfg.setAllowCredentials(true);
         cfg.setAllowedHeaders(Collections.singletonList("*"));

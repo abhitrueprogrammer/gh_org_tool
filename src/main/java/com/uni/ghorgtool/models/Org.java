@@ -1,9 +1,12 @@
 package com.uni.ghorgtool.models;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.util.Set;
 
 @Entity
+@Data
 @Table(name = "orgs")
 public class Org {
     @Id
@@ -18,7 +21,5 @@ public class Org {
     public String getOrgName() {
         return orgName;
     }
-
-    
 
 }

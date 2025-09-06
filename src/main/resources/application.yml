@@ -9,6 +9,13 @@ spring:
     locations: classpath:db/migration
   main:
     banner-mode: off
+  spring:
+    security:
+      debug: true
+  logging:
+    level:
+      org.springframework.security: TRACE
+      org.springframework.web: TRACE
 
   jpa:
     hibernate:

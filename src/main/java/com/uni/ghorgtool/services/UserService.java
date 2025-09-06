@@ -119,9 +119,13 @@ public class UserService {
                     String role = (String) membership.get("role");
 
                     if ("admin".equals(role)) {
-
                         Optional<Org> OptOrg = orgRepository.findByOrgName(orgLogin);
-                        if (OptOrg != null) {
+                        if (OptOrg == null) {
+                            Org newOrg = new Org();
+                            newOrg.setOrgName(orgLogin);
+                            Org savedOrg = orgRepository.save(newOrg);
+                            adminOrgs.add(savedOrg);
+                        } else {
                             adminOrgs.add(OptOrg.get());
                         }
                     }
