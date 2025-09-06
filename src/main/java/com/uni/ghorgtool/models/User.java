@@ -18,6 +18,7 @@ import java.util.Set;
 public class User implements UserDetails {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
 
     @Column(nullable = false, unique = true)
@@ -34,14 +35,10 @@ public class User implements UserDetails {
     public String getGithubToken() {
         return githubToken;
     }
-        @ManyToMany
-    @JoinTable(
-        name = "user_org",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "org_id")
-    )
-    private Set<Org> orgs;
 
+    @ManyToMany
+    @JoinTable(name = "user_org", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "org_id"))
+    private Set<Org> orgs;
 
     // other fields like name, regNo, etc.
 
