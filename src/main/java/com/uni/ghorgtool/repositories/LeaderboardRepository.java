@@ -13,4 +13,7 @@ import com.uni.ghorgtool.models.Leaderboard;
 public interface LeaderboardRepository extends JpaRepository<Leaderboard, Long> {
     @Query("SELECT l FROM Leaderboard l WHERE l.org.orgId = :orgId ORDER BY l.commits DESC")
     List<Leaderboard> findByOrgOrderByCommitsDesc(@Param("orgId") Long orgId);
+
+    void deleteByOrg_OrgId(Long orgId);
+
 }

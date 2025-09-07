@@ -20,5 +20,11 @@ public class Leaderboard {
     @Column(nullable = false)
     private Integer commits;
 
+    // Custom constructor for convenience
+    public Leaderboard(Org org, String username, Integer commits) {
+        this.org = org;
+        this.username = username;
+        this.commits = commits;
+    }
     // getters and setters
 }

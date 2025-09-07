@@ -1,12 +1,17 @@
 package com.uni.ghorgtool.controllers;
 
+import com.uni.ghorgtool.Exception.LeaderboardException;
 import com.uni.ghorgtool.dto.request.LeaderboardRequest;
+import com.uni.ghorgtool.dto.response.LeaderboardResponse;
 import com.uni.ghorgtool.models.Org;
 import com.uni.ghorgtool.models.User;
 import com.uni.ghorgtool.services.GitHubService;
+import com.uni.ghorgtool.services.LeaderboardService;
 import com.uni.ghorgtool.services.OrgService;
 import com.uni.ghorgtool.services.UserService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -27,9 +32,10 @@ public class Leaderboard {
     private final UserService userService;
     private final OrgService orgService;
     private final GitHubService gitHubService;
+    private final LeaderboardService leaderboardService;
 
     @PostMapping("/leaderboard/refresh")
-    public ResponseEntity<List<Map<String, Object>>> refreshLeaderboard(
+    public ResponseEntity<LeaderboardResponse> refreshLeaderboard(
             @RequestBody LeaderboardRequest leaderboardRequest, Authentication authentication) {
 
         Long orgId = leaderboardRequest.getOrgId();
@@ -37,37 +43,46 @@ public class Leaderboard {
         Optional<User> userOpt = userService.findByEmail(userEmail);
 
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of(Map.of("error", "Unauthorized: User not found.")));
+            throw new LeaderboardException("Unauthorized: User not found.");
+
         }
 
         User user = userOpt.get();
         Optional<Org> orgOpt = orgService.findById(orgId);
 
         if (orgOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of(Map.of("error", "Organization not found.")));
+            throw new LeaderboardException("Organization not found.");
+
         }
 
         Org org = orgOpt.get();
 
         boolean isAdmin = user.getOrgs().stream().anyMatch(o -> o.getId().equals(org.getId()));
         if (!isAdmin) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of(Map.of("error", "Unauthorized: User is not an admin of this organization.")));
+            throw new LeaderboardException("Unauthroized: User is not an admin of this organization.");
         }
 
-        Map<String, Integer> contributors = gitHubService.getContributionLeaderboard(org.getOrgName(), user.getGithubToken());
+        Map<String, Integer> contributors = gitHubService.getContributionLeaderboard(org.getOrgName(),
+                user.getGithubToken());
 
-        
-        List<Map<String, Object>> topContributors = contributors.entrySet().stream()
+        leaderboardService.deleteByOrgId(orgId);
+
+        for (Map.Entry<String, Integer> entry : contributors.entrySet()) {
+            String username = entry.getKey();
+            Integer commits = entry.getValue();
+            com.uni.ghorgtool.models.Leaderboard newLeaderboard = new com.uni.ghorgtool.models.Leaderboard(org,
+                    username, commits);
+            leaderboardService.saveLeaderboard(newLeaderboard);
+            // process leaderboard entry for username/commits
+        }
+        List<LeaderboardResponse.ContributorCommits> topContributors = contributors.entrySet().stream()
                 .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                .limit(100)
-                .map(e -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("login", e.getKey());
-                    map.put("contributions", e.getValue());
-                    return map;
-                })
+                .limit(10)
+                .map(e -> new LeaderboardResponse.ContributorCommits(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
 
-        return new ResponseEntity<>(topContributors, HttpStatus.OK);
+        LeaderboardResponse response = new LeaderboardResponse(topContributors);
+        return ResponseEntity.ok(response);
+
     }
 }
