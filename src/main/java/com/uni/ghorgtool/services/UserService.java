@@ -120,14 +120,8 @@ public class UserService {
 
                     if ("admin".equals(role)) {
                         Optional<Org> OptOrg = orgRepository.findByOrgName(orgLogin);
-                        if (OptOrg == null) {
-                            Org newOrg = new Org();
-                            newOrg.setOrgName(orgLogin);
-                            Org savedOrg = orgRepository.save(newOrg);
-                            adminOrgs.add(savedOrg);
-                        } else {
-                            adminOrgs.add(OptOrg.get());
-                        }
+                        Org savedOrg = OptOrg.orElseGet(() -> orgRepository.save(new Org(orgLogin)));
+                        adminOrgs.add(savedOrg);
                     }
                 }
             }

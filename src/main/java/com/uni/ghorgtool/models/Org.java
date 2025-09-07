@@ -22,4 +22,8 @@ public class Org {
         return orgName;
     }
 
+    public Org(String orgName) {
+        this.orgName = orgName;
+    }
+
 }
