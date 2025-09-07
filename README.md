@@ -84,4 +84,4 @@ The application will be accessible at `http://localhost:8080`.
 As outlined in the `roadmap.md`, the future vision for this project includes:
 
 - **Improved Scalability:** Implementing a message queue (e.g., RabbitMQ, Kafka) for asynchronous processing of leaderboard generation jobs.
-- **GitHub Token Management:** Allowing users to update their GitHub tokens through the API.
+- **Additional GitHub Tools:** Build more tools leveraging the GitHub API to help manage and automate tasks within your GitHub organization.
