@@ -2,9 +2,10 @@ package com.uni.ghorgtool.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
-
+@NoArgsConstructor
 @Entity
 @Data
 @Table(name = "orgs")
