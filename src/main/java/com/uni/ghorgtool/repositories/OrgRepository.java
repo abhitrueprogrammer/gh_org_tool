@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import com.uni.ghorgtool.models.Org;
 @Repository
-public interface OrgRepository extends JpaRepository<Org, String> {
+public interface OrgRepository extends JpaRepository<Org, Long> {
     Optional<Org> findByOrgName(String orgLogin);
 }

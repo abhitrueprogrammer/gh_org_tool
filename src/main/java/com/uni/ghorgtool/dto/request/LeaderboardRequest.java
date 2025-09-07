@@ -8,5 +8,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LeaderboardRequest {
-    private String orgId;
+    private Long orgId;
 }

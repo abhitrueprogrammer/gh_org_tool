@@ -1,74 +1,62 @@
 package com.uni.ghorgtool.controllers;
 
-import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
 import com.uni.ghorgtool.dto.request.LeaderboardRequest;
+import com.uni.ghorgtool.models.Org;
 import com.uni.ghorgtool.models.User;
+import com.uni.ghorgtool.services.GitHubService;
+import com.uni.ghorgtool.services.OrgService;
 import com.uni.ghorgtool.services.UserService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-// Rate limiting here
-// Add a table containing repos user is an admin of
-// Add a table containing leaderboard info. Just create leaderboard once.
 @RestController
 @RequiredArgsConstructor
 public class Leaderboard {
+
     private final UserService userService;
+    private final OrgService orgService;
+    private final GitHubService gitHubService;
 
     @PostMapping("/leaderboard/refresh")
     public ResponseEntity<List<Map<String, Object>>> refreshLeaderboard(
-            @RequestParam LeaderboardRequest leaderboardRequest, Authentication authentication) {
-        RestTemplate restTemplate = new RestTemplate();
-        Map<String, Integer> contributors = new HashMap<>();
-        List<Map<String, Object>> repos = new ArrayList<>();
-        String org_id = leaderboardRequest.getOrgId();
+            @RequestBody LeaderboardRequest leaderboardRequest, Authentication authentication) {
+
+        Long orgId = leaderboardRequest.getOrgId();
         String userEmail = authentication.getName();
         Optional<User> userOpt = userService.findByEmail(userEmail);
 
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of(Map.of("error", "Unauthorized: User not found.")));
         }
+
         User user = userOpt.get();
-        String token = user.getGithubToken();
-        HttpHeaders headers = new HttpHeaders();
+        Optional<Org> orgOpt = orgService.findById(orgId);
 
-        headers.set("Accept", "application/vnd.github+json");
-        headers.set("Authorization", "token " + token);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        int page = 1;
-        while (true) {
-            String reposUrl = "https://api.github.com/orgs/" + org + "/repos?per_page=100&page=" + page;
-            ResponseEntity<Map[]> response = restTemplate.exchange(reposUrl, HttpMethod.GET, entity, Map[].class);
-            Map<String, Object>[] repoArray = response.getBody();
-            if (repoArray == null || repoArray.length == 0)
-                break;
-            repos.addAll(Arrays.asList(repoArray));
-            page++;
+        if (orgOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of(Map.of("error", "Organization not found.")));
         }
 
-        for (Map<String, Object> repo : repos) {
-            String fullName = (String) repo.get("full_name");
-            String contributorsUrl = "https://api.github.com/repos/" + fullName + "/contributors?per_page=100";
-            ResponseEntity<Map[]> contribResponse = restTemplate.exchange(contributorsUrl, HttpMethod.GET, entity,
-                    Map[].class);
-            Map<String, Object>[] contribArray = contribResponse.getBody();
-            if (contribArray != null) {
-                for (Map<String, Object> c : contribArray) {
-                    String login = (String) c.get("login");
-                    Integer contribCount = (Integer) c.get("contributions");
-                    contributors.put(login, contributors.getOrDefault(login, 0) + contribCount);
-                }
-            }
+        Org org = orgOpt.get();
+
+        boolean isAdmin = user.getOrgs().stream().anyMatch(o -> o.getId().equals(org.getId()));
+        if (!isAdmin) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of(Map.of("error", "Unauthorized: User is not an admin of this organization.")));
         }
 
+        Map<String, Integer> contributors = gitHubService.getContributionLeaderboard(org.getOrgName(), user.getGithubToken());
+
+        
         List<Map<String, Object>> topContributors = contributors.entrySet().stream()
                 .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
                 .limit(100)

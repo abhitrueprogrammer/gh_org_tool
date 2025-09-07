@@ -1,27 +1,13 @@
 package com.uni.ghorgtool.services;
 
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.util.Pair;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import com.uni.ghorgtool.dto.OrgCheckResult;
 import com.uni.ghorgtool.models.Org;
 import com.uni.ghorgtool.models.User;
 import com.uni.ghorgtool.repositories.OrgRepository;
 import com.uni.ghorgtool.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,6 +16,7 @@ import java.util.Set;
 public class UserService {
     private final UserRepository userRepository;
     private final OrgRepository orgRepository;
+    private final GitHubService gitHubService;
 
     public Optional<User> findByUserId(String userId) {
         return userRepository.findById(userId);
@@ -52,26 +39,7 @@ public class UserService {
     }
 
     public String getGithubUsername(String githubToken) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(githubToken);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        String url = "https://api.github.com/user";
-        RestTemplate restTemplate = new RestTemplate();
-
-        ResponseEntity<Map> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                Map.class);
-
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            return (String) response.getBody().get("login"); // GitHub username
-        } else {
-            throw new RuntimeException("Failed to fetch GitHub username");
-        }
+        return gitHubService.getGithubUsername(githubToken);
     }
 
     public boolean setOrgs(String email) {
@@ -84,54 +52,20 @@ public class UserService {
         User user = optUser.get();
 
         String githubToken = user.getGithubToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(githubToken);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-        RestTemplate restTemplate = new RestTemplate();
+        Set<String> adminOrgsNames = gitHubService.getAdminOrgs(githubToken);
 
-        String username = getGithubUsername(githubToken);
-
-        String orgsUrl = "https://api.github.com/user/orgs";
-        ResponseEntity<List> response = restTemplate.exchange(
-                orgsUrl,
-                HttpMethod.GET,
-                entity,
-                List.class);
-
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            List<Map<String, Object>> orgs = response.getBody();
-
-            Set<Org> adminOrgs = new HashSet<>();
-            for (Map<String, Object> org : orgs) {
-                String orgLogin = (String) org.get("login");
-                String membershipUrl = "https://api.github.com/orgs/" + orgLogin + "/memberships/" + username;
-
-                ResponseEntity<Map> membershipResponse = restTemplate.exchange(
-                        membershipUrl,
-                        HttpMethod.GET,
-                        entity,
-                        Map.class);
-
-                if (membershipResponse.getStatusCode() == HttpStatus.OK && membershipResponse.getBody() != null) {
-                    Map<String, Object> membership = membershipResponse.getBody();
-                    String role = (String) membership.get("role");
-
-                    if ("admin".equals(role)) {
-                        Optional<Org> OptOrg = orgRepository.findByOrgName(orgLogin);
-                        Org savedOrg = OptOrg.orElseGet(() -> orgRepository.save(new Org(orgLogin)));
-                        adminOrgs.add(savedOrg);
-                    }
-                }
-            }
-
-            user.setOrgs(adminOrgs);
-
-            return true;
-        } else {
-            throw new RuntimeException("Failed to fetch organizations from GitHub");
+        Set<Org> adminOrgs = new HashSet<>();
+        for (String orgName : adminOrgsNames) {
+            Optional<Org> optOrg = orgRepository.findByOrgName(orgName);
+            Org savedOrg = optOrg.orElseGet(() -> orgRepository.save(new Org(orgName)));
+            adminOrgs.add(savedOrg);
         }
+
+        user.setOrgs(adminOrgs);
+        userRepository.save(user);
+
+        return true;
     }
 
 }

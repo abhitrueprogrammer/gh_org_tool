@@ -21,7 +21,9 @@ public class Org {
     public String getOrgName() {
         return orgName;
     }
-
+    public Long getId() {
+        return orgId;
+    }
     public Org(String orgName) {
         this.orgName = orgName;
     }
