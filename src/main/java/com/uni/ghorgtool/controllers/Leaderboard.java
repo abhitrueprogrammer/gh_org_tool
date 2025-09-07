@@ -3,8 +3,10 @@ package com.uni.ghorgtool.controllers;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -30,13 +32,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 public class Leaderboard {
-    
+
     private final UserService userService;
     private final OrgService orgService;
     private final GitHubService gitHubService;
     private final LeaderboardService leaderboardService;
     private final EncryptorUtil encryptorUtil;
-    private final RedissonClient redissonClient; 
+    private final RedissonClient redissonClient;
+
     @GetMapping("/leaderboard")
     public ResponseEntity<LeaderboardResponse> leaderBoardGet(
             @RequestParam Long orgId,
@@ -80,50 +83,66 @@ public class Leaderboard {
             @RequestBody LeaderboardRefreshRequest LeaderboardRefreshRequest, Authentication authentication) {
 
         Long org_id = LeaderboardRefreshRequest.getOrgId();
-        String userEmail = authentication.getName();
-        Optional<User> userOpt = userService.findByEmail(userEmail);
+        String lockKey = "leaderboard-refresh-lock-" + org_id;
+        RLock lock = redissonClient.getLock(lockKey);
+        boolean lockAcquired = false;
+        try {
+            lockAcquired = lock.tryLock(2, 240, TimeUnit.SECONDS);
+            if (!lockAcquired) {
+                throw new LeaderboardException("Could not acquire lock, please try again later.");
+            }
+            String userEmail = authentication.getName();
+            Optional<User> userOpt = userService.findByEmail(userEmail);
 
-        if (userOpt.isEmpty()) {
-            throw new LeaderboardException("Unauthorized: User not found.");
+            if (userOpt.isEmpty()) {
+                throw new LeaderboardException("Unauthorized: User not found.");
 
+            }
+
+            User user = userOpt.get();
+            Optional<Org> orgOpt = orgService.findById(org_id);
+
+            if (orgOpt.isEmpty()) {
+                throw new LeaderboardException("Organization not found.");
+
+            }
+            Org org = orgOpt.get();
+            boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(org_id));
+            if (!isAdmin) {
+                System.out.println(org_id);
+                throw new LeaderboardException("Unauthorized: User is not an admin of this organization.");
+            }
+
+            String decryptedToken = encryptorUtil.decrypt(user.getGithubToken());
+
+            Map<String, Integer> contributors = gitHubService.getContributionLeaderboard(org.getOrgName(),
+                    decryptedToken);
+
+            leaderboardService.deleteByOrgId(org_id);
+
+            for (Map.Entry<String, Integer> entry : contributors.entrySet()) {
+                String username = entry.getKey();
+                Integer commits = entry.getValue();
+                com.uni.ghorgtool.models.Leaderboard newLeaderboard = new com.uni.ghorgtool.models.Leaderboard(org,
+                        username, commits);
+                leaderboardService.saveLeaderboard(newLeaderboard);
+            }
+            List<LeaderboardResponse.ContributorCommits> topContributors = contributors.entrySet().stream()
+                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                    .limit(10)
+                    .map(e -> new LeaderboardResponse.ContributorCommits(e.getKey(), e.getValue()))
+                    .collect(Collectors.toList());
+
+            LeaderboardResponse response = new LeaderboardResponse(topContributors);
+            return ResponseEntity.ok(response);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new LeaderboardException("Interrupted while waiting for lock" );
+        } finally {
+            if (lockAcquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-
-        User user = userOpt.get();
-        Optional<Org> orgOpt = orgService.findById(org_id);
-
-        if (orgOpt.isEmpty()) {
-            throw new LeaderboardException("Organization not found.");
-
-        }
-        Org org = orgOpt.get();
-        boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(org_id));
-        if (!isAdmin) {
-            System.out.println(org_id);
-            throw new LeaderboardException("Unauthorized: User is not an admin of this organization.");
-        }
-
-        String decryptedToken = encryptorUtil.decrypt(user.getGithubToken());
-
-        Map<String, Integer> contributors = gitHubService.getContributionLeaderboard(org.getOrgName(),
-                decryptedToken);
-
-        leaderboardService.deleteByOrgId(org_id);
-
-        for (Map.Entry<String, Integer> entry : contributors.entrySet()) {
-            String username = entry.getKey();
-            Integer commits = entry.getValue();
-            com.uni.ghorgtool.models.Leaderboard newLeaderboard = new com.uni.ghorgtool.models.Leaderboard(org,
-                    username, commits);
-            leaderboardService.saveLeaderboard(newLeaderboard);
-        }
-        List<LeaderboardResponse.ContributorCommits> topContributors = contributors.entrySet().stream()
-                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
-                .limit(10)
-                .map(e -> new LeaderboardResponse.ContributorCommits(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-
-        LeaderboardResponse response = new LeaderboardResponse(topContributors);
-        return ResponseEntity.ok(response);
 
     }
 }

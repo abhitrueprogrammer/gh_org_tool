@@ -1,61 +1,80 @@
-# Cookoff Backend
+# GitHub Organization Analytics & Leaderboard Platform
 
-This is the backend for the gh-org-tools platform. It is a Spring Boot application that provides APIs for user gh-org-tools.
+[![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://www.java.com)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Docker](https://img.shields.io/badge/Docker-blue.svg)](https://www.docker.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-orange.svg)](https://www.mysql.com/)
+[![Redis](https://img.shields.io/badge/Redis-7.0-red.svg)](https://redis.io/)
+[![JWT](https://img.shields.io/badge/JWT-Auth-black.svg)](https://jwt.io/)
+[![Gradle](https://img.shields.io/badge/Gradle-8.5-blue.svg)](https://gradle.org/)
+
+A robust backend platform designed to provide insightful analytics and a competitive leaderboard for GitHub organizations. This application empowers users to track contributor activity, identify top performers, and gain a deeper understanding of their open-source or private projects.
+
+## Key Features
+
+*   **Secure User Authentication:** Implements JWT-based authentication with Spring Security for secure access to the platform.
+*   **GitHub Organization Integration:** Seamlessly connects with the GitHub API to fetch data about organizations, repositories, and contributors.
+*   **Contributor Leaderboard:** A core feature that ranks contributors based on their commits, providing a clear view of top performers across an organization's repositories.
+*   **RESTful API:** A well-documented and easy-to-use RESTful API for all platform functionalities.
+*   **Scalable & Containerized:** The entire application is containerized using Docker and managed with Docker Compose, ensuring easy deployment, scalability, and environment consistency.
+*   **Database Migrations:** Utilizes Flyway for version-controlled database schema management, making it easy to track and apply database changes.
+*   **Caching Layer:** Leverages Redis for caching frequently accessed data, significantly improving response times and reducing the load on the database and GitHub API.
+
+## Architecture & Workflow
+
+The application follows a modern, containerized architecture. The core is a Spring Boot application that communicates with a MySQL database for persistent storage and a Redis instance for caching. The `flow.png` diagram below illustrates the high-level workflow of the application.
+
+![Application Flow](flow.png)
 
 ## Technologies Used
 
-*   **Java 21**
-*   **Spring Boot 3.2.0**
-*   **Gradle**
-*   **Spring Web**
-*   **Spring Data JPA**
-*   **Spring Security**
-*   **My SQL**
-*   **Flyway** for database migrations
-*   **JWT** for authentication
-*   **Lombok**
-*   **Judge0** for code execution
+### Backend
+- **Java 21**
+- **Spring Boot 3.2.0**
+  - Spring Web
+  - Spring Data JPA
+  - Spring Security
+- **MySQL 8.0:** Primary relational database.
+- **Redis 7.0:** In-memory data store for caching.
+- **Redisson:** Advanced Redis client for Java.
+- **Flyway:** Database migration tool.
+- **JJWT:** Java library for JWT creation and validation.
+- **Lombok:** To reduce boilerplate code.
 
-## Setup and Installation
-1. **Run the docker container**
-  ```bash
-  docker compose up --build
-  ```
+### DevOps & Tooling
+- **Docker & Docker Compose:** For containerization and orchestration.
+- **Gradle:** Dependency management and build automation.
+- **Git:** Version control.
+
+## Getting Started
+
+### Prerequisites
+- Docker and Docker Compose installed on your machine.
+- A `.env` file in the project root.
+
+### Installation & Setup
 
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/abhitrueprogrammer/gh-org-tools.git
-    ```
-2.  **Navigate to the project directory:**
-    ```bash
     cd gh-org-tools
     ```
-3.  **Build the project:**
+
+2.  **Create a `.env` file** in the root of the project. Refer to .env.example.
+
+3.  **Run the application with Docker Compose:**
+    This single command will build the Spring Boot application image, and start the application, MySQL, and Redis containers.
     ```bash
-    ./gradlew build
+    docker-compose up --build
     ```
 
-## Configuration
+The application will be accessible at `http://localhost:8080`.
 
-The application uses a `.env` file for configuration. Create a `.env` file in the root of the project with the following variables:
+## Future Enhancements
 
-```
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/cookoff
-SPRING_DATASOURCE_USERNAME=your-username
-SPRING_DATASOURCE_PASSWORD=your-password
-SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+As outlined in the `roadmap.md`, the future vision for this project includes:
 
-```
-
-## Running the application
-
-You can run the application using the following command:
-
-```bash
-./gradlew bootRun
-```
-
-The application will be available at `http://localhost:8080`.
-
-
-
+*   **Enhanced Security:** Encrypting sensitive data like GitHub tokens before storing them in the database.
+*   **Improved Scalability:** Implementing a message queue (e.g., RabbitMQ, Kafka) for asynchronous processing of leaderboard generation jobs.
+*   **Distributed Locking:** Using Redis-based distributed locks to prevent race conditions and ensure data consistency during concurrent operations.
+*   **GitHub Token Management:** Allowing users to update their GitHub tokens through the API.

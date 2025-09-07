@@ -25,11 +25,11 @@ spring:
       hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
 
   redis:
-    host: localhost
+    host: redis
     port: 6379
 server:
   port: 8080
 
 encryption:
   password: "your-secret-password"
-  salt: "your-16-byte-hex-salt"
+  salt: "0123456789ABCDEF0123456789ABCDEF"  # 32 chars, 16 bytes valid
