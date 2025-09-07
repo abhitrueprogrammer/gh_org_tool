@@ -27,6 +27,10 @@ The application follows a modern, containerized architecture. The core is a Spri
 
 ![Application Flow](flow.png)
 
+## Database Diagram
+
+![Database Diagram](db_diag.png)
+
 ## Technologies Used
 
 ### Backend
