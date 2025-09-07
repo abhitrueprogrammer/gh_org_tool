@@ -28,7 +28,7 @@ public class Leaderboard {
         RestTemplate restTemplate = new RestTemplate();
         Map<String, Integer> contributors = new HashMap<>();
         List<Map<String, Object>> repos = new ArrayList<>();
-        String org = leaderboardRequest.getOrg();
+        String org_id = leaderboardRequest.getOrgId();
         String userEmail = authentication.getName();
         Optional<User> userOpt = userService.findByEmail(userEmail);
 
