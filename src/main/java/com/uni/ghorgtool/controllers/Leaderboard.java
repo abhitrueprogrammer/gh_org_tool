@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.redisson.api.RedissonClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,18 +23,20 @@ import com.uni.ghorgtool.services.GitHubService;
 import com.uni.ghorgtool.services.LeaderboardService;
 import com.uni.ghorgtool.services.OrgService;
 import com.uni.ghorgtool.services.UserService;
+import com.uni.ghorgtool.util.EncryptorUtil;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 public class Leaderboard {
-
+    
     private final UserService userService;
     private final OrgService orgService;
     private final GitHubService gitHubService;
     private final LeaderboardService leaderboardService;
-
+    private final EncryptorUtil encryptorUtil;
+    private final RedissonClient redissonClient; 
     @GetMapping("/leaderboard")
     public ResponseEntity<LeaderboardResponse> leaderBoardGet(
             @RequestParam Long orgId,
@@ -99,8 +102,10 @@ public class Leaderboard {
             throw new LeaderboardException("Unauthorized: User is not an admin of this organization.");
         }
 
+        String decryptedToken = encryptorUtil.decrypt(user.getGithubToken());
+
         Map<String, Integer> contributors = gitHubService.getContributionLeaderboard(org.getOrgName(),
-                user.getGithubToken());
+                decryptedToken);
 
         leaderboardService.deleteByOrgId(org_id);
 

@@ -1,15 +1,18 @@
 package com.uni.ghorgtool.services;
 
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
+import org.springframework.stereotype.Service;
+
 import com.uni.ghorgtool.models.Org;
 import com.uni.ghorgtool.models.User;
 import com.uni.ghorgtool.repositories.OrgRepository;
 import com.uni.ghorgtool.repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import com.uni.ghorgtool.util.EncryptorUtil;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +20,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final OrgRepository orgRepository;
     private final GitHubService gitHubService;
-
     public Optional<User> findByUserId(String userId) {
         return userRepository.findById(userId);
     }
@@ -38,8 +40,13 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public String getGithubUsername(String githubToken) {
-        return gitHubService.getGithubUsername(githubToken);
+    private final EncryptorUtil encryptorUtil;
+
+    public String getGithubUsername(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        String decryptedToken = encryptorUtil.decrypt(user.getGithubToken());
+        return gitHubService.getGithubUsername(decryptedToken);
     }
 
     public boolean setOrgs(String email) {
@@ -51,7 +58,7 @@ public class UserService {
 
         User user = optUser.get();
 
-        String githubToken = user.getGithubToken();
+        String githubToken = encryptorUtil.decrypt(user.getGithubToken());
 
         Set<String> adminOrgsNames = gitHubService.getAdminOrgs(githubToken);
 
@@ -71,7 +78,8 @@ public class UserService {
     public User updateGithubToken(String email, String newGithubToken) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-        user.setGithubToken(newGithubToken);
+        String encryptedToken = encryptorUtil.encrypt(newGithubToken);
+        user.setGithubToken(encryptedToken);
         return userRepository.save(user);
     }
 

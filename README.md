@@ -17,6 +17,10 @@ This is the backend for the gh-org-tools platform. It is a Spring Boot applicati
 *   **Judge0** for code execution
 
 ## Setup and Installation
+1. **Run the docker container**
+  ```bash
+  docker compose up --build
+  ```
 
 1.  **Clone the repository:**
     ```bash

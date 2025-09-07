@@ -29,3 +29,7 @@ spring:
     port: 6379
 server:
   port: 8080
+
+encryption:
+  password: "your-secret-password"
+  salt: "your-16-byte-hex-salt"

@@ -1,5 +1,6 @@
 package com.uni.ghorgtool.controllers;
 
+import com.uni.ghorgtool.util.EncryptorUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,8 @@ public class AuthController {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final EncryptorUtil encryptorUtil;
+
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> createUserHandler(@RequestBody User user) throws UserException
     {
@@ -55,7 +58,7 @@ public class AuthController {
         createdUser.setEmail(email);
         createdUser.setPassword(passwordEncoder.encode(password));
         createdUser.setRole(role);
-        createdUser.setGithubToken(githubToken);
+        createdUser.setGithubToken(encryptorUtil.encrypt(githubToken));
 
         User savedUser = userRepository.save(createdUser);
 
@@ -74,7 +77,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginUserHandler(@RequestBody LoginRequest loginRequest)
-    {   
+    {
         String username = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
