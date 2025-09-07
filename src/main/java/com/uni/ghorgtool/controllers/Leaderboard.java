@@ -10,11 +10,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uni.ghorgtool.Exception.LeaderboardException;
 import com.uni.ghorgtool.dto.request.LeaderboardRefreshRequest;
-import com.uni.ghorgtool.dto.request.LeaderboardRequest;
 import com.uni.ghorgtool.dto.response.LeaderboardResponse;
 import com.uni.ghorgtool.models.Org;
 import com.uni.ghorgtool.models.User;
@@ -36,11 +36,10 @@ public class Leaderboard {
 
     @GetMapping("/leaderboard")
     public ResponseEntity<LeaderboardResponse> leaderBoardGet(
-            @RequestBody LeaderboardRequest leaderboardRequest,
+            @RequestParam Long orgId,
+            @RequestParam(required = false) Integer limit,
             Authentication authentication) {
 
-        Long orgId = leaderboardRequest.getOrgId();
-        Integer limit = leaderboardRequest.getLimit();
         if (limit == null || limit <= 0)
             limit = 10; // default to 10
 
@@ -56,13 +55,13 @@ public class Leaderboard {
             throw new LeaderboardException("Organization not found.");
         }
 
-        Org org = orgOpt.get();
-        boolean isAdmin = user.getOrgs().stream().anyMatch(o -> o.getId().equals(org.getId()));
+        boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(orgId));
         if (!isAdmin) {
             throw new LeaderboardException("Unauthorized: User is not an admin of this organization.");
         }
 
-        List<com.uni.ghorgtool.models.Leaderboard> leaderboard = leaderboardService.getTopContributorsByOrgId(orgId, limit);
+        List<com.uni.ghorgtool.models.Leaderboard> leaderboard = leaderboardService.getTopContributorsByOrgId(orgId,
+                limit);
 
         List<LeaderboardResponse.ContributorCommits> contributorList = leaderboard.stream()
                 .map(entry -> new LeaderboardResponse.ContributorCommits(entry.getUsername(), entry.getCommits()))
@@ -77,7 +76,7 @@ public class Leaderboard {
     public ResponseEntity<LeaderboardResponse> refreshLeaderboard(
             @RequestBody LeaderboardRefreshRequest LeaderboardRefreshRequest, Authentication authentication) {
 
-        Long orgId = LeaderboardRefreshRequest.getOrgId();
+        Long org_id = LeaderboardRefreshRequest.getOrgId();
         String userEmail = authentication.getName();
         Optional<User> userOpt = userService.findByEmail(userEmail);
 
@@ -87,24 +86,23 @@ public class Leaderboard {
         }
 
         User user = userOpt.get();
-        Optional<Org> orgOpt = orgService.findById(orgId);
+        Optional<Org> orgOpt = orgService.findById(org_id);
 
         if (orgOpt.isEmpty()) {
             throw new LeaderboardException("Organization not found.");
 
         }
-
         Org org = orgOpt.get();
-
-        boolean isAdmin = user.getOrgs().stream().anyMatch(o -> o.getId().equals(org.getId()));
+        boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(org_id));
         if (!isAdmin) {
-            throw new LeaderboardException("Unauthroized: User is not an admin of this organization.");
+            System.out.println(org_id);
+            throw new LeaderboardException("Unauthorized: User is not an admin of this organization.");
         }
 
         Map<String, Integer> contributors = gitHubService.getContributionLeaderboard(org.getOrgName(),
                 user.getGithubToken());
 
-        leaderboardService.deleteByOrgId(orgId);
+        leaderboardService.deleteByOrgId(org_id);
 
         for (Map.Entry<String, Integer> entry : contributors.entrySet()) {
             String username = entry.getKey();

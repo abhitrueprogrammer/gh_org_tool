@@ -1,12 +1,14 @@
 package com.uni.ghorgtool.services;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
+
 import com.uni.ghorgtool.models.Org;
 import com.uni.ghorgtool.repositories.OrgRepository;
 
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -31,5 +33,9 @@ public class OrgService {
 
     public void deleteById(Long orgId) {
         orgRepository.deleteById(orgId);
+    }
+
+    public List<Org> getOrgsForUser(String userId) {
+        return orgRepository.findOrgsByUserId(userId);
     }
 }

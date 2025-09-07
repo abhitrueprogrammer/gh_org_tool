@@ -68,4 +68,11 @@ public class UserService {
         return true;
     }
 
+    public User updateGithubToken(String email, String newGithubToken) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        user.setGithubToken(newGithubToken);
+        return userRepository.save(user);
+    }
+
 }

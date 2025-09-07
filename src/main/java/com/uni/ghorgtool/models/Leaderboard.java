@@ -2,7 +2,9 @@ package com.uni.ghorgtool.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @Entity
 @Data
 @Table(name = "leaderboard")

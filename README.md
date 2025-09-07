@@ -55,5 +55,3 @@ The application will be available at `http://localhost:8080`.
 
 
 
-#TODO:
-1. encrypt github token

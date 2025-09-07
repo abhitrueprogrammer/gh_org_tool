@@ -31,12 +31,13 @@ public class GitHubService {
     public Map<String, Integer> getContributionLeaderboard(String orgName, String githubToken) {
         Map<String, Integer> contributors = new HashMap<>();
         List<Repo> repos = fetchAllRepos(orgName, githubToken);
-
+        System.out.println(repos);
         for (Repo repo : repos) {
             List<Contributor> repoContributors = fetchContributorsForRepo(repo.getFullName(), githubToken);
             for (Contributor contributor : repoContributors) {
                 contributors.merge(contributor.getLogin(), contributor.getContributions(), Integer::sum);
             }
+        System.out.println(contributors);
         }
 
         return contributors;
