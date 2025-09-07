@@ -1,8 +1,10 @@
 package com.uni.ghorgtool.models;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
+@Data
 @Table(name = "leaderboard")
 public class Leaderboard {
 

@@ -7,7 +7,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class LeaderboardRequest {
+public class LeaderboardRefreshRequest {
     private Long orgId;
-    private Integer limit;  
 }
+
+

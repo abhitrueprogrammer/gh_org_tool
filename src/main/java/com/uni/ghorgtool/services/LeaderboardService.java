@@ -1,12 +1,13 @@
 package com.uni.ghorgtool.services;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.uni.ghorgtool.models.Leaderboard;
-import com.uni.ghorgtool.models.Org;
 import com.uni.ghorgtool.repositories.LeaderboardRepository;
-import com.uni.ghorgtool.repositories.OrgRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -33,9 +34,16 @@ public class LeaderboardService {
     public void deleteById(Long LeaderboardId) {
         leaderboardRepository.deleteById(LeaderboardId);
     }
+
     @Transactional
     public void deleteByOrgId(Long orgId) {
         leaderboardRepository.deleteByOrg_OrgId(orgId);
+    }
+
+    public List<Leaderboard> getTopContributorsByOrgId(Long orgId, int limit) {
+        PageRequest pageable = PageRequest.of(0, limit);
+        Page<Leaderboard> page = leaderboardRepository.findByOrgIdOrderByCommitsDesc(orgId, pageable);
+        return page.getContent();
     }
 
 }
