@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import lombok.ToString;
 
 @Entity
 @Table(name = "users")
@@ -38,6 +39,7 @@ public class User implements UserDetails {
 
     @ManyToMany
     @JoinTable(name = "user_org", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "org_id"))
+    @ToString.Exclude
     private Set<Org> orgs;
 
     // other fields like name, regNo, etc.

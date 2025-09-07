@@ -95,7 +95,7 @@ public class AuthController {
     private Authentication authenticate(String username, String password) {
         Optional<User> userDetails = userRepository.findByEmail(username);
 
-        if(userDetails == null)
+        if(userDetails.isEmpty())
         {
             throw new BadCredentialsException("invalid username");
         }
@@ -106,7 +106,7 @@ public class AuthController {
             throw new BadCredentialsException("Invalid Password...");
         }
 
-        return new UsernamePasswordAuthenticationToken(userDetails,null,user.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(user,null,user.getAuthorities());
     }
 
 }
