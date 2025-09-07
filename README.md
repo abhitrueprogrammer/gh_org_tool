@@ -10,26 +10,27 @@
 
 A robust springboot based backend platform designed to provide insightful analytics and a competitive leaderboard for GitHub organizations. This application empowers users to track contributor activity, identify top performers, and gain a deeper understanding of their open-source or private projects.
 
-## Key Features
-
-- **Enterprise grade:** Uses all conventions utilized by springboot to separate data layer from business logic from controllers.
-- **Secure User Authentication:** Implements JWT-based authentication with Spring Security for secure access to the platform.
-- **GitHub Organization Integration:** Seamlessly connects with the GitHub API to fetch data about organizations, repositories, and contributors.
-- **Contributor Leaderboard:** A core feature that ranks contributors based on their commits, providing a clear view of top performers across an organization's repositories.
-- **RESTful API:** A well-documented and easy-to-use RESTful API for all platform functionalities.
-- **Scalable & Containerized:** The entire application is containerized using Docker and managed with Docker Compose, ensuring easy deployment, scalability, and environment consistency.
-- **Database Migrations:** Utilizes Flyway for version-controlled database schema management, making it easy to track and apply database changes.
-- **Redis Lock & Distributed Locking:** Leverages Redisson to implement Redis-based distributed locks that safely serialize access to the heavy-duty /leaderboard/refresh route, preventing simultaneous leaderboard creation requests and ensuring data consistency during concurrent operations.
-
 ## Architecture & Workflow
 
-The application follows a modern, containerized architecture. The core is a Spring Boot application that communicates with a MySQL database for persistent storage and a Redis instance for caching. The `flow.png` diagram below illustrates the high-level workflow of the application.
+The application follows a modern, containerized architecture. The core is a Spring Boot application that communicates with a MySQL database for persistent storage and a Redis instance for distributed locking. The `flow` diagram below illustrates the high-level workflow of the application.
 
 ![Application Flow](flow.png)
 
 ## Database Diagram
 
 ![Database Diagram](db_diag.png)
+
+## Key Features
+
+- **Enterprise grade:** Uses all conventions utilized by springboot to separate data layer from business logic from controllers.
+- **Secure User Authentication:** Implements JWT-based authentication with Spring Security for secure access to the platform.
+- **GitHub API Integration:** Seamlessly connects with the GitHub API to fetch data about organizations, repositories, and contributors.
+- **Contributor Leaderboard:** A core feature that ranks contributors based on their commits, providing a clear view of top performers across an organization's repositories.
+- **RESTful API:** A easy-to-use RESTful API for all platform functionalities.
+- **Scalable & Containerized:** The entire application is containerized using Docker and managed with Docker Compose, ensuring easy deployment, scalability, and environment consistency.
+- **Database Migrations:** Utilizes Flyway for version-controlled database schema management, making it easy to track and apply database changes.
+- **Redis based Distributed Locking:** Leverages Redisson to implement Redis-based distributed locks that safely serialize access to the heavy-duty /leaderboard/refresh route, preventing simultaneous leaderboard creation requests and ensuring data consistency during concurrent operations.
+
 
 ## Technologies Used
 
