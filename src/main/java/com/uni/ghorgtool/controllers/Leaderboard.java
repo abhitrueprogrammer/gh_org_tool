@@ -61,7 +61,7 @@ public class Leaderboard {
             throw new LeaderboardException("Organization not found.");
         }
 
-        boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(orgId));
+        boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(Long.valueOf(orgId)));
         if (!isAdmin) {
             throw new LeaderboardException("Unauthorized: User is not an admin of this organization.");
         }
@@ -107,7 +107,7 @@ public class Leaderboard {
 
             }
             Org org = orgOpt.get();
-            boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(org_id));
+            boolean isAdmin = orgService.getOrgsForUser(user.getId()).stream().anyMatch(o -> o.getId().equals(Long.valueOf(org_id)));
             if (!isAdmin) {
                 System.out.println(org_id);
                 throw new LeaderboardException("Unauthorized: User is not an admin of this organization.");

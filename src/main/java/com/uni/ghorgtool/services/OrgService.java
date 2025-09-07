@@ -35,7 +35,7 @@ public class OrgService {
         orgRepository.deleteById(orgId);
     }
 
-    public List<Org> getOrgsForUser(String userId) {
+    public List<Org> getOrgsForUser(Long userId) {
         return orgRepository.findOrgsByUserId(userId);
     }
 }

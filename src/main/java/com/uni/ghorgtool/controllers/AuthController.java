@@ -14,15 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.Optional;
-import com.github.f4b6a3.uuid.UuidCreator;
 import com.uni.ghorgtool.Exception.UserException;
 import com.uni.ghorgtool.config.JwtProvider;
 import com.uni.ghorgtool.dto.request.LoginRequest;
 import com.uni.ghorgtool.dto.response.AuthResponse;
 import com.uni.ghorgtool.models.User;
 import com.uni.ghorgtool.repositories.UserRepository;
-
-import java.util.UUID;
 
 
 @RestController
@@ -40,7 +37,6 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> createUserHandler(@RequestBody User user) throws UserException
     {
-        String id = UuidCreator.getTimeOrdered().toString();
         String email = user.getEmail();
         String password = user.getPassword();
         String githubToken = user.getGithubToken();
@@ -54,7 +50,6 @@ public class AuthController {
 
         User createdUser = new User();
 
-        createdUser.setId(id);
         createdUser.setEmail(email);
         createdUser.setPassword(passwordEncoder.encode(password));
         createdUser.setRole(role);

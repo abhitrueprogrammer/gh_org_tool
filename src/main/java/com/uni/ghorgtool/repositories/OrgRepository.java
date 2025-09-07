@@ -13,5 +13,5 @@ import com.uni.ghorgtool.models.Org;
 public interface OrgRepository extends JpaRepository<Org, Long> {
     Optional<Org> findByOrgName(String orgLogin);
     @Query("SELECT o FROM Org o JOIN o.users u WHERE u.id = :userId")
-    List<Org> findOrgsByUserId(@Param("userId") String userId);
+    List<Org> findOrgsByUserId(@Param("userId") Long userId);
 }

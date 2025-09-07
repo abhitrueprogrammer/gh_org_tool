@@ -12,8 +12,9 @@ COPY .env .
 # Copy source code
 COPY src src
 
-# Make gradlew executable
-RUN chmod +x ./gradlew
+# Copy wait-for-it.sh script into the image
+COPY wait-for-it.sh /app/wait-for-it.sh
+RUN chmod +x ./gradlew /app/wait-for-it.sh
 
 # Build the Spring Boot fat JAR
 RUN ./gradlew clean bootJar --no-daemon
@@ -21,5 +22,5 @@ RUN ./gradlew clean bootJar --no-daemon
 # Expose port 8080 for the app
 EXPOSE 8080
 
-# Run the generated Spring Boot fat JAR after build
-ENTRYPOINT ["java", "-jar", "build/libs/gh-org-tools-0.0.1-SNAPSHOT.jar"]
+# Run wait-for-it.sh to wait for MySQL readiness before launching app
+ENTRYPOINT ["./wait-for-it.sh", "db:3306", "--timeout=60", "--strict", "--", "java", "-jar", "build/libs/gh-org-tools-0.0.1-SNAPSHOT.jar"]
