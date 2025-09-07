@@ -68,7 +68,9 @@ public class Leaderboard {
 
         List<com.uni.ghorgtool.models.Leaderboard> leaderboard = leaderboardService.getTopContributorsByOrgId(orgId,
                 limit);
-
+        if(leaderboard.isEmpty()){
+            throw new LeaderboardException("Leaderboard data not found. Please refresh the leaderboard first.");
+        }
         List<LeaderboardResponse.ContributorCommits> contributorList = leaderboard.stream()
                 .map(entry -> new LeaderboardResponse.ContributorCommits(entry.getUsername(), entry.getCommits()))
                 .collect(Collectors.toList());

@@ -1,4 +1,4 @@
-# GitHub Organization Analytics & Leaderboard Platform
+# GitHub Organization Leaderboard Platform
 
 [![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://www.java.com)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
@@ -8,17 +8,18 @@
 [![JWT](https://img.shields.io/badge/JWT-Auth-black.svg)](https://jwt.io/)
 [![Gradle](https://img.shields.io/badge/Gradle-8.5-blue.svg)](https://gradle.org/)
 
-A robust backend platform designed to provide insightful analytics and a competitive leaderboard for GitHub organizations. This application empowers users to track contributor activity, identify top performers, and gain a deeper understanding of their open-source or private projects.
+A robust springboot based backend platform designed to provide insightful analytics and a competitive leaderboard for GitHub organizations. This application empowers users to track contributor activity, identify top performers, and gain a deeper understanding of their open-source or private projects.
 
 ## Key Features
 
-*   **Secure User Authentication:** Implements JWT-based authentication with Spring Security for secure access to the platform.
-*   **GitHub Organization Integration:** Seamlessly connects with the GitHub API to fetch data about organizations, repositories, and contributors.
-*   **Contributor Leaderboard:** A core feature that ranks contributors based on their commits, providing a clear view of top performers across an organization's repositories.
-*   **RESTful API:** A well-documented and easy-to-use RESTful API for all platform functionalities.
-*   **Scalable & Containerized:** The entire application is containerized using Docker and managed with Docker Compose, ensuring easy deployment, scalability, and environment consistency.
-*   **Database Migrations:** Utilizes Flyway for version-controlled database schema management, making it easy to track and apply database changes.
-*   **Caching Layer:** Leverages Redis for caching frequently accessed data, significantly improving response times and reducing the load on the database and GitHub API.
+- **Enterprise grade:** Uses all conventions utilized by springboot to separate data layer from business logic from controllers.
+- **Secure User Authentication:** Implements JWT-based authentication with Spring Security for secure access to the platform.
+- **GitHub Organization Integration:** Seamlessly connects with the GitHub API to fetch data about organizations, repositories, and contributors.
+- **Contributor Leaderboard:** A core feature that ranks contributors based on their commits, providing a clear view of top performers across an organization's repositories.
+- **RESTful API:** A well-documented and easy-to-use RESTful API for all platform functionalities.
+- **Scalable & Containerized:** The entire application is containerized using Docker and managed with Docker Compose, ensuring easy deployment, scalability, and environment consistency.
+- **Database Migrations:** Utilizes Flyway for version-controlled database schema management, making it easy to track and apply database changes.
+- **Redis Lock & Distributed Locking:** Leverages Redisson to implement Redis-based distributed locks that safely serialize access to the heavy-duty /leaderboard/refresh route, preventing simultaneous leaderboard creation requests and ensuring data consistency during concurrent operations.
 
 ## Architecture & Workflow
 
@@ -29,6 +30,7 @@ The application follows a modern, containerized architecture. The core is a Spri
 ## Technologies Used
 
 ### Backend
+
 - **Java 21**
 - **Spring Boot 3.2.0**
   - Spring Web
@@ -42,6 +44,7 @@ The application follows a modern, containerized architecture. The core is a Spri
 - **Lombok:** To reduce boilerplate code.
 
 ### DevOps & Tooling
+
 - **Docker & Docker Compose:** For containerization and orchestration.
 - **Gradle:** Dependency management and build automation.
 - **Git:** Version control.
@@ -49,12 +52,14 @@ The application follows a modern, containerized architecture. The core is a Spri
 ## Getting Started
 
 ### Prerequisites
+
 - Docker and Docker Compose installed on your machine.
 - A `.env` file in the project root.
 
 ### Installation & Setup
 
 1.  **Clone the repository:**
+
     ```bash
     git clone https://github.com/abhitrueprogrammer/gh-org-tools.git
     cd gh-org-tools
@@ -74,7 +79,5 @@ The application will be accessible at `http://localhost:8080`.
 
 As outlined in the `roadmap.md`, the future vision for this project includes:
 
-*   **Enhanced Security:** Encrypting sensitive data like GitHub tokens before storing them in the database.
-*   **Improved Scalability:** Implementing a message queue (e.g., RabbitMQ, Kafka) for asynchronous processing of leaderboard generation jobs.
-*   **Distributed Locking:** Using Redis-based distributed locks to prevent race conditions and ensure data consistency during concurrent operations.
-*   **GitHub Token Management:** Allowing users to update their GitHub tokens through the API.
+- **Improved Scalability:** Implementing a message queue (e.g., RabbitMQ, Kafka) for asynchronous processing of leaderboard generation jobs.
+- **GitHub Token Management:** Allowing users to update their GitHub tokens through the API.
